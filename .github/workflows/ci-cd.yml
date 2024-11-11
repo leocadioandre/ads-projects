@@ -50,10 +50,15 @@ jobs:
           REPO: ${{ github.repository }}
           SECRET_NAME: EC2_PUBLIC_IP
         run: |
+          # Baixar a chave pública do GitHub Actions
           PUB_KEY_DATA=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" https://api.github.com/repos/$REPO/actions/secrets/public-key)
           PUB_KEY=$(echo "$PUB_KEY_DATA" | jq -r .key)
           KEY_ID=$(echo "$PUB_KEY_DATA" | jq -r .key_id)
-          ENCRYPTED_VALUE=$(echo -n "${{ env.EC2_PUBLIC_IP }}" | openssl rsautl -encrypt -pubin -inkey <(echo "$PUB_KEY") -oaep -base64)
+          
+          # Criptografar o valor com a chave pública
+          ENCRYPTED_VALUE=$(echo -n "${{ env.EC2_PUBLIC_IP }}" | openssl pkeyutl -encrypt -pubin -inkey <(echo "$PUB_KEY") -oaep -base64)
+
+          # Atualizar o segredo do GitHub via API
           curl -X PUT \
             -H "Authorization: Bearer $GITHUB_TOKEN" \
             -H "Accept: application/vnd.github+json" \
