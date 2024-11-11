@@ -53,49 +53,15 @@ jobs:
           REPO: ${{ github.repository }}
           SECRET_NAME: EC2_PUBLIC_IP
         run: |
-          # Baixar a chave pública do GitHub Actions
           PUB_KEY_DATA=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" https://api.github.com/repos/$REPO/actions/secrets/public-key)
-
-          # Exibir a resposta completa da API para diagnóstico
-          echo "PUB_KEY_DATA: $PUB_KEY_DATA"
-
-          # Extrair a chave pública e o key_id
           PUB_KEY=$(echo "$PUB_KEY_DATA" | jq -r .key)
           KEY_ID=$(echo "$PUB_KEY_DATA" | jq -r .key_id)
-
-          # Verificar se a chave pública foi extraída corretamente
-          if [ "$PUB_KEY" == "null" ]; then
-            echo "Erro: Chave pública não encontrada na resposta da API"
-            exit 1
-          fi
-
-          # Exibir a chave pública para verificação
-          echo "Public Key: $PUB_KEY"
-
-          # Decode the base64 public key to binary and create the PEM file
-          echo "$PUB_KEY" | base64 --decode > public_key.bin
-          echo "-----BEGIN PUBLIC KEY-----" > public_key.pem
-          base64 public_key.bin | fold -w 64 >> public_key.pem
-          echo "-----END PUBLIC KEY-----" >> public_key.pem
-
-          # Verificar se o arquivo da chave pública foi criado corretamente
-          cat public_key.pem
-
-          # Criptografar o valor com a chave pública
-          ENCRYPTED_VALUE=$(echo -n "${{ env.EC2_PUBLIC_IP }}" | openssl pkeyutl -encrypt -pubin -inkey public_key.pem)
-
-          # Converter a saída binária para base64
-          ENCRYPTED_VALUE_BASE64=$(echo "$ENCRYPTED_VALUE" | base64)
-
-          # Atualizar o segredo do GitHub via API
+          ENCRYPTED_VALUE=$(echo -n "${{ env.EC2_PUBLIC_IP }}" | openssl rsautl -encrypt -pubin -inkey <(echo "$PUB_KEY") -oaep -base64)
           curl -X PUT \
             -H "Authorization: Bearer $GITHUB_TOKEN" \
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/$REPO/actions/secrets/$SECRET_NAME \
-            -d "{\"encrypted_value\": \"$ENCRYPTED_VALUE_BASE64\", \"key_id\": \"$KEY_ID\"}"
-
-          # Limpar o arquivo temporário
-          rm -f public_key.pem public_key.bin
+            -d "{\"encrypted_value\": \"$ENCRYPTED_VALUE\", \"key_id\": \"$KEY_ID\"}"
 
   build:
     runs-on: ubuntu-latest
