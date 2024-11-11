@@ -56,7 +56,7 @@ jobs:
           KEY_ID=$(echo "$PUB_KEY_DATA" | jq -r .key_id)
           
           # Criptografar o valor com a chave pública
-          ENCRYPTED_VALUE=$(echo -n "${{ env.EC2_PUBLIC_IP }}" | openssl pkeyutl -encrypt -pubin -inkey <(echo "$PUB_KEY") -oaep -base64)
+          ENCRYPTED_VALUE=$(echo -n "${{ env.EC2_PUBLIC_IP }}" | openssl pkeyutl -encrypt -pubin -inkey <(echo "$PUB_KEY") -base64)
 
           # Atualizar o segredo do GitHub via API
           curl -X PUT \
