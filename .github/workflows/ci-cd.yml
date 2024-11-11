@@ -71,15 +71,16 @@ jobs:
 
           # Exibir a chave pública para verificação
           echo "Public Key: $PUB_KEY"
-          
-          # Adicionar os cabeçalhos necessários para o formato PEM
+
+          # Decode the base64 public key to binary and create the PEM file
+          echo "$PUB_KEY" | base64 --decode > public_key.bin
           echo "-----BEGIN PUBLIC KEY-----" > public_key.pem
-          echo "$PUB_KEY" >> public_key.pem
+          base64 public_key.bin | fold -w 64 >> public_key.pem
           echo "-----END PUBLIC KEY-----" >> public_key.pem
 
           # Verificar se o arquivo da chave pública foi criado corretamente
           cat public_key.pem
-          
+
           # Criptografar o valor com a chave pública
           ENCRYPTED_VALUE=$(echo -n "${{ env.EC2_PUBLIC_IP }}" | openssl pkeyutl -encrypt -pubin -inkey public_key.pem)
 
@@ -92,9 +93,9 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/$REPO/actions/secrets/$SECRET_NAME \
             -d "{\"encrypted_value\": \"$ENCRYPTED_VALUE_BASE64\", \"key_id\": \"$KEY_ID\"}"
-          
+
           # Limpar o arquivo temporário
-          rm -f public_key.pem
+          rm -f public_key.pem public_key.bin
 
   build:
     runs-on: ubuntu-latest
