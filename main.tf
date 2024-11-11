@@ -40,7 +40,7 @@ resource "aws_instance" "techshop_instance" {
   ami                         = "ami-0866a3c8686eaeeba"
   instance_type               = "t2.micro"
   subnet_id                   = aws_subnet.techshop_subnet.id
-  security_groups             = [aws_security_group.techshop_sg.name]
+  vpc_security_group_ids =    [aws_security_group.techshop_sg.id]
   associate_public_ip_address = true
 
   tags = {
