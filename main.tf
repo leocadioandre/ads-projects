@@ -37,7 +37,7 @@ resource "aws_security_group" "techshop_sg" {
 
 # EC2 instance configuration
 resource "aws_instance" "techshop_instance" {
-  ami                         = "ami-0c55b159cbfafe1f0"
+  ami                         = "ami-0866a3c8686eaeeba"
   instance_type               = "t2.micro"
   subnet_id                   = aws_subnet.techshop_subnet.id
   security_groups             = [aws_security_group.techshop_sg.name]
