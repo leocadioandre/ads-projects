@@ -27,6 +27,14 @@ resource "aws_security_group" "techshop_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # Allow SSH access
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # For GitHub Actions, you might restrict it further
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -42,6 +50,7 @@ resource "aws_instance" "techshop_instance" {
   subnet_id                   = aws_subnet.techshop_subnet.id
   vpc_security_group_ids =    [aws_security_group.techshop_sg.id]
   associate_public_ip_address = true
+  key_name                    = var.key_name
 
   tags = {
     Name = "TechShop-Instance"
