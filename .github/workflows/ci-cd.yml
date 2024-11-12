@@ -55,32 +55,29 @@ jobs:
         run: |
           echo "The EC2 Public IP is: ${{ steps.get_ip.outputs.ec2_public_ip }}"
 
-      - name: Destroy Terraform
-        run: terraform destroy
 
+  build:
+    runs-on: ubuntu-latest
+    needs: terraform
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-  #build:
-    #runs-on: ubuntu-latest
-    #needs: terraform
-    #steps:
-    #  - name: Checkout Code
-    #    uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
 
-    #  - name: Set up Python
-    #    uses: actions/setup-python@v4
-    #    with:
-    #      python-version: 3.11
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-    #  - name: Install Dependencies
-    #    run: |
-    #      python -m pip install --upgrade pip
-     #     pip install -r requirements.txt
+      - name: Run Unit Tests
+        run: pytest tests/unit
 
-    #  - name: Run Unit Tests
-    #    run: pytest tests/unit
-#
-    #  - name: Build Docker Image
-    #    run: docker build -t techshop/app:${{ github.sha }} .
+      - name: Build Docker Image
+        run: docker build -t techshop/app:${{ github.sha }} .
 
   deploy:
     runs-on: ubuntu-latest
