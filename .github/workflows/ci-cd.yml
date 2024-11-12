@@ -84,5 +84,5 @@ jobs:
           AWS_REGION: us-east-1
           EC2_PUBLIC_IP: ${{ needs.terraform.outputs.ec2_ip }}
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@${{ env.EC2_PUBLIC_IP }} \
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ env.EC2_PUBLIC_IP }} \
             "docker pull techshop/app:${{ github.sha }} && docker run -d -p 80:80 techshop/app:${{ github.sha }}"
