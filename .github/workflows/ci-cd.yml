@@ -14,6 +14,8 @@ on:
 jobs:
   terraform:
     runs-on: ubuntu-latest
+    outputs:
+      ec2_ip: ${{ steps.get_ip.outputs.ec2_ip }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -44,24 +46,6 @@ jobs:
           IP=$(terraform output -raw ec2_public_ip)
           echo "EC2_PUBLIC_IP=$IP" >> $GITHUB_ENV
 
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-
-      - name: Update GitHub Secret via API
-        env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
-          SECRET_NAME: EC2_PUBLIC_IP
-        run: |
-          PUB_KEY_DATA=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" https://api.github.com/repos/$REPO/actions/secrets/public-key)
-          PUB_KEY=$(echo "$PUB_KEY_DATA" | jq -r .key)
-          KEY_ID=$(echo "$PUB_KEY_DATA" | jq -r .key_id)
-          ENCRYPTED_VALUE=$(echo -n "${{ env.EC2_PUBLIC_IP }}" | openssl rsautl -encrypt -pubin -inkey <(echo "$PUB_KEY") -oaep -base64)
-          curl -X PUT \
-            -H "Authorization: Bearer $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/$REPO/actions/secrets/$SECRET_NAME \
-            -d "{\"encrypted_value\": \"$ENCRYPTED_VALUE\", \"key_id\": \"$KEY_ID\"}"
 
   build:
     runs-on: ubuntu-latest
@@ -98,6 +82,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: us-east-1
+          EC2_PUBLIC_IP: ${{ needs.terraform.outputs.ec2_ip }}
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_PUBLIC_IP }} \
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ env.EC2_PUBLIC_IP }} \
             "docker pull techshop/app:${{ github.sha }} && docker run -d -p 80:80 techshop/app:${{ github.sha }}"
