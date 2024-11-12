@@ -15,7 +15,7 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
     outputs:
-      ec2_ip: ${{ steps.get_ip.outputs.ec2_ip }}
+      ec2_ip: ${{ steps.get_ip.outputs.ec2_public_ip }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -83,24 +83,15 @@ jobs:
       - name: terraform wrapper
         uses: hashicorp/setup-terraform@v3
 
-      - name: Initialize Terraform
-        run: terraform init
-
-      - name: Get EC2 Public IP
-        id: get_ip
-        run: |
-          IP=$(terraform output -raw ec2_public_ip)
-          echo "EC2_PUBLIC_IP=$IP" >> $GITHUB_ENV
-
       - name: Debug EC2 IP
-        run: echo "EC2 IP is $IP"
+        run: echo "EC2 IP is ${{ steps.get_ip.outputs.ec2_public_ip }}"
 
       - name: Deploy to AWS EC2
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: us-east-1
-          EC2_PUBLIC_IP: ${{ needs.terraform.outputs.get_ip }}
+          EC2_PUBLIC_IP: ${{ steps.get_ip.outputs.ec2_public_ip }}
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@${{ env.EC2_PUBLIC_IP }} \
             "docker pull techshop/app:${{ github.sha }} && docker run -d -p 80:80 techshop/app:${{ github.sha }}"
