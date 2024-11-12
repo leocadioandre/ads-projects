@@ -72,10 +72,13 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build, terraform]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+
+      - name: Debug EC2 IP
+        run: echo "EC2 IP is ${{ needs.terraform.outputs.ec2_ip }}"
 
       - name: Deploy to AWS EC2
         env:
