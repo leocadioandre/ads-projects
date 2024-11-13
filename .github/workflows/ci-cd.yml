@@ -7,10 +7,10 @@ permissions:
 on:
   push:
     branches:
-      - main
+      - develop
   pull_request:
     branches:
-      - main
+      - develop
 
 jobs:
   terraform:
@@ -25,6 +25,8 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Setup Terraform
+        with:
+            infra-terraform-working-directory: "infra"
         run: |
           sudo apt-get update && sudo apt-get install -y unzip
           curl -LO https://releases.hashicorp.com/terraform/1.6.0/terraform_1.6.0_linux_amd64.zip
@@ -32,6 +34,8 @@ jobs:
           sudo mv terraform /usr/local/bin/
 
       - name: Initialize Terraform
+        with:
+          infra-terraform-working-directory: "infra"
         run: terraform init
 
       - name: Apply Terraform Configuration
