@@ -66,6 +66,12 @@ jobs:
           echo "$(terraform output -raw private_key)" > $PRIVATE_KEY_PATH
           chmod 400 $PRIVATE_KEY_PATH
 
+          # Verificar se o arquivo foi criado
+          if [ ! -f "$PRIVATE_KEY_PATH" ]; then
+            echo "ERRO: Chave privada não encontrada em $PRIVATE_KEY_PATH!"
+            exit 1
+          fi
+
           # Verificando se o arquivo foi criado corretamente
           ls -l $PRIVATE_KEY_PATH
 
@@ -119,7 +125,7 @@ jobs:
           PRIVATE_KEY_PATH: ${{ runner.temp }}/private_key.pem
         run: |
           echo "Conectando ao IP: $EC2_PUBLIC_IP com a chave $PRIVATE_KEY_PATH"
-          ssh -o StrictHostKeyChecking=no -i $PRIVATE_KEY_PATH ubuntu@${{ env.EC2_PUBLIC_IP }} \
+          ssh -o StrictHostKeyChecking=no -i $PRIVATE_KEY_PATH ubuntu@ec2-${{ env.EC2_PUBLIC_IP }}.compute-1.amazonaws.com \
             "docker pull techshop/app:${{ github.sha }} && docker run -d -p 80:80 techshop/app:${{ github.sha }}"
 
 
