@@ -34,7 +34,7 @@ resource "aws_security_group" "allow_ssh" {
 
 # EC2 instance configuration
 resource "aws_instance" "techshop_instance" {
-  ami                    = "ami-0c55b159cbfafe1f0" # AMI Ubuntu
+  ami                    = "ami-0866a3c8686eaeeba" # AMI Ubuntu
   instance_type          = "t2.micro"
   key_name               = aws_key_pair.deployer.key_name
   security_groups        = [aws_security_group.allow_ssh.name]
