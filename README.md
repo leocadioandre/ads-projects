@@ -1,2 +1,9 @@
-# ads-projects
-Repósitorio com o objetivo de compartilhar projetos de analise e desenvolvimento de sistemas.
+# TechShop App - Devops Projett - ADS
+
+Repósitorio com o objetivo de compartilhar o projeto de CI-CD da disciplina:
+
+- Desenvolvimento com DevOps
+
+Projeto:
+
+Implementação de Práticas de DevOps na Empresa TechShop.

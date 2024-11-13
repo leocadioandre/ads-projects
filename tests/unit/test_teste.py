@@ -1,5 +1,5 @@
 def test_placeholder():
     """
-    This is a placeholder test that always passes.
+    Script com objetivo apenas de indicar onde devem ser feitos os testes em um workflow de ci-cd.
     """
     assert True
