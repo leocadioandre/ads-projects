@@ -21,8 +21,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: terraform wrapper
+      - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
 
       - name: Setup Terraform
         run: |
@@ -32,14 +34,12 @@ jobs:
           sudo mv terraform /usr/local/bin/
 
       - name: Initialize Terraform
-        with:
-          working-directory: "infra"
+        working-directory: infra
         run: terraform init
 
       - name: Apply Terraform Configuration
         id: terraform
-        with:
-          working-directory: "infra"
+        working-directory: infra
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -50,6 +50,7 @@ jobs:
 
       - name: Get EC2 Public IP
         id: get_ip
+        working-directory: infra
         run: |
           IP=$(terraform output -raw ec2_public_ip)
           echo "EC2_PUBLIC_IP=$IP" >> $GITHUB_ENV
@@ -106,10 +107,10 @@ jobs:
       #    ssh -o StrictHostKeyChecking=no ubuntu@${{ env.EC2_PUBLIC_IP }} \
       #      "docker pull techshop/app:${{ github.sha }} && docker run -d -p 80:80 techshop/app:${{ github.sha }}"
 
-      - name: Initialize Terraform Before Destroy
-        run: terraform init
-
-      - name: Destroy Terraform
-        with:
-            working-directory: "infra"
-        run: terraform destroy
+      - name: Destroy Terraform Resources
+        if: always()
+        working-directory: infra
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: terraform destroy -auto-approve
