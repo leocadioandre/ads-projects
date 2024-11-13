@@ -4,9 +4,14 @@ provider "aws" {
   secret_key = var.aws_secret_key
 }
 
+resource "tls_private_key" "deployer_key" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
 resource "aws_key_pair" "deployer" {
   key_name   = "deployer-key"
-  public_key = file("~/.ssh/id_rsa.pub")
+  public_key = tls_private_key.deployer_key.public_key_openssh
 }
 
 resource "aws_security_group" "allow_ssh" {
@@ -36,6 +41,10 @@ resource "aws_instance" "techshop_instance" {
 
   tags = {
     Name = "TechShop-Instance"
+  }
+
+  provisioner "local-exec" {
+    command = "echo '${tls_private_key.deployer_key.private_key_pem}' > private_key.pem && chmod 400 private_key.pem"
   }
 }
 
