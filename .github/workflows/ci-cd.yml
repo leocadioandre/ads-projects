@@ -116,6 +116,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: us-east-1
           EC2_PUBLIC_IP: ${{ needs.terraform.outputs.ec2_ip }}
+          PRIVATE_KEY_PATH: ${{ runner.temp }}/private_key.pem
         run: |
           echo "Conectando ao IP: $EC2_PUBLIC_IP com a chave $PRIVATE_KEY_PATH"
           ssh -o StrictHostKeyChecking=no -i $PRIVATE_KEY_PATH ubuntu@${{ env.EC2_PUBLIC_IP }} \
