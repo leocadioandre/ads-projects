@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       ec2_ip: ${{ steps.get_ip.outputs.ec2_public_ip }}
+      pem: ${{ steps.get_ip.outputs.ec2_public_ip }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -55,16 +56,18 @@ jobs:
           # Obtendo o IP público da instância EC2
           IP=$(terraform output -raw ec2_public_ip)
           echo "EC2_PUBLIC_IP=$IP" >> $GITHUB_ENV
+          echo "::set-output name=ec2_public_ip::$IP"
 
           # Exibindo o IP público para logs
           echo "EC2 Public IP: $IP"
 
           # Salvando a chave privada e corrigindo permissões
-          echo "$(terraform output -raw private_key)" > $HOME/private_key.pem
-          chmod 400 $HOME/private_key.pem
+          PRIVATE_KEY_PATH="${{ runner.temp }}/private_key.pem"
+          echo "$(terraform output -raw private_key)" > $PRIVATE_KEY_PATH
+          chmod 400 $PRIVATE_KEY_PATH
 
           # Verificando se o arquivo foi criado corretamente
-          ls -l $HOME/private_key.pem
+          ls -l $PRIVATE_KEY_PATH
 
       - name: Show EC2 IP
         run: |
@@ -114,7 +117,8 @@ jobs:
           AWS_REGION: us-east-1
           EC2_PUBLIC_IP: ${{ needs.terraform.outputs.ec2_ip }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i $HOME/private_key.pem ubuntu@${{ env.EC2_PUBLIC_IP }} \
+          echo "Conectando ao IP: $EC2_PUBLIC_IP com a chave $PRIVATE_KEY_PATH"
+          ssh -o StrictHostKeyChecking=no -i $PRIVATE_KEY_PATH ubuntu@${{ env.EC2_PUBLIC_IP }} \
             "docker pull techshop/app:${{ github.sha }} && docker run -d -p 80:80 techshop/app:${{ github.sha }}"
 
 
