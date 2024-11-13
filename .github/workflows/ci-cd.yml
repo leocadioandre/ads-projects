@@ -26,7 +26,7 @@ jobs:
 
       - name: Setup Terraform
         with:
-            infra-terraform-working-directory: "infra"
+            working-directory: "infra"
         run: |
           sudo apt-get update && sudo apt-get install -y unzip
           curl -LO https://releases.hashicorp.com/terraform/1.6.0/terraform_1.6.0_linux_amd64.zip
@@ -35,13 +35,13 @@ jobs:
 
       - name: Initialize Terraform
         with:
-          infra-terraform-working-directory: "infra"
+          working-directory: "infra"
         run: terraform init
 
       - name: Apply Terraform Configuration
         id: terraform
         with:
-          infra-terraform-working-directory: "infra"
+          working-directory: "infra"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -110,4 +110,6 @@ jobs:
       #      "docker pull techshop/app:${{ github.sha }} && docker run -d -p 80:80 techshop/app:${{ github.sha }}"
 
       - name: Destroy Terraform
+        with:
+            working-directory: "infra"
         run: terraform destroy
