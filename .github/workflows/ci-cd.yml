@@ -98,31 +98,16 @@ jobs:
       - name: Debug EC2 IP
         run: echo "EC2 IP is ${{ needs.terraform.outputs.ec2_ip }}"
 
-      #- name: Deploy to AWS EC2
-      #  env:
-      #    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #    AWS_REGION: us-east-1
-      #    EC2_PUBLIC_IP: ${{ needs.terraform.outputs.ec2_ip }}
-      #  run: |
-      #    ssh -o StrictHostKeyChecking=no ubuntu@${{ env.EC2_PUBLIC_IP }} \
-      #      "docker pull techshop/app:${{ github.sha }} && docker run -d -p 80:80 techshop/app:${{ github.sha }}"
-
-      #- name: Destroy Terraform Resources
-       # if: always()
-       # working-directory: infra
-       # env:
-       #   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-       #   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-       # run: terraform destroy -auto-approve
-
-      - name: Terminate EC2 Instance
+      - name: Deploy to AWS EC2
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
           EC2_PUBLIC_IP: ${{ needs.terraform.outputs.ec2_ip }}
         run: |
-          INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=ip-address,Values=${EC2_PUBLIC_IP}" \
-                        --query "Reservations[*].Instances[*].InstanceId" --output text)
-          aws ec2 terminate-instances --instance-ids $INSTANCE_ID
-          aws ec2 wait instance-terminated --instance-ids $INSTANCE_ID
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ env.EC2_PUBLIC_IP }} \
+            "docker pull techshop/app:${{ github.sha }} && docker run -d -p 80:80 techshop/app:${{ github.sha }}"
+
+
+
+      
